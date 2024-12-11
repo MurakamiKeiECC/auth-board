@@ -1,0 +1,237 @@
+openapi: 3.0.3
+info:
+  title: Full-Stack Bulletin Board API
+  description: API documentation for the full-stack bulletin board application.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '201':
+          description: User successfully registered
+        '400':
+          description: Bad request
+
+  /api/auth/login:
+    post:
+      summary: Log in a user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                password:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: jwt_token_here
+        '401':
+          description: Unauthorized
+
+  /api/posts:
+    get:
+      summary: Get all posts
+      tags:
+        - Posts
+      responses:
+        '200':
+          description: List of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    title:
+                      type: string
+                      example: Post title
+                    content:
+                      type: string
+                      example: Post content
+                    userId:
+                      type: integer
+                      example: 1
+    post:
+      summary: Create a new post
+      tags:
+        - Posts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Post title
+                content:
+                  type: string
+                  example: Post content
+      responses:
+        '201':
+          description: Post successfully created
+        '400':
+          description: Bad request
+
+  /api/posts/{id}:
+    get:
+      summary: Get a specific post by ID
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Post details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: Post title
+                  content:
+                    type: string
+                    example: Post content
+                  userId:
+                    type: integer
+                    example: 1
+        '404':
+          description: Post not found
+    put:
+      summary: Update a specific post by ID
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: Updated title
+                content:
+                  type: string
+                  example: Updated content
+      responses:
+        '200':
+          description: Post successfully updated
+        '400':
+          description: Bad request
+        '404':
+          description: Post not found
+    delete:
+      summary: Delete a specific post by ID
+      tags:
+        - Posts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Post successfully deleted
+        '404':
+          description: Post not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Post title
+        content:
+          type: string
+          example: Post content
+        userId:
+          type: integer
+          example: 1

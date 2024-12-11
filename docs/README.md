@@ -34,7 +34,8 @@
 ---
 
 ## ディレクトリ構成
-lua
+
+```lua
 auth-board/
 ├── backend/
 │   ├── src/
@@ -82,11 +83,13 @@ auth-board/
 ├── docker-compose.yml      # Docker Compose構成
 ├── README.md               # プロジェクト説明
 └── .env                    # 環境変数ファイル
+```
 
 ---
 
 ## バックエンド設計
 
+```
 prisma
 model User {
   id        Int      @id @default(autoincrement())
@@ -105,6 +108,7 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+```
 
 ---
 
@@ -152,6 +156,7 @@ model Post {
 
 ### DockerFile（バックエンド用）
 
+```
 # ベースイメージ
 FROM node:18-alpine
 
@@ -202,10 +207,13 @@ EXPOSE 3000
 
 # デフォルトコマンド
 CMD ["npm", "run", "dev"]
+```
+
 ---
 
 ## docker-compose.yml
 
+```
 version: '3.8'
 
 services:
@@ -251,3 +259,4 @@ services:
 
 volumes:
   db_data:
+```

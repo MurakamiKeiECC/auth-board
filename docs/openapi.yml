@@ -1,237 +1,353 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Full-Stack Bulletin Board API
-  description: API documentation for the full-stack bulletin board application.
+  title: Bulletin Board API
+  description: A simple bulletin board API for managing users, posts, and comments.
   version: 1.0.0
+
 servers:
-  - url: http://localhost:3001
-    description: Local development server
+  - url: http://localhost:3000/api/v1
 
 paths:
-  /api/auth/register:
-    post:
-      summary: Register a new user
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: user@example.com
-                password:
-                  type: string
-                  format: password
-                  example: password123
-      responses:
-        '201':
-          description: User successfully registered
-        '400':
-          description: Bad request
-
-  /api/auth/login:
-    post:
-      summary: Log in a user
-      tags:
-        - Authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: user@example.com
-                password:
-                  type: string
-                  format: password
-                  example: password123
-      responses:
-        '200':
-          description: User logged in successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    example: jwt_token_here
-        '401':
-          description: Unauthorized
-
-  /api/posts:
+  /users:
     get:
-      summary: Get all posts
-      tags:
-        - Posts
+      summary: Get a list of users
+      operationId: getUsers
       responses:
         '200':
-          description: List of posts
+          description: A list of users
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    id:
-                      type: integer
-                      example: 1
-                    title:
-                      type: string
-                      example: Post title
-                    content:
-                      type: string
-                      example: Post content
-                    userId:
-                      type: integer
-                      example: 1
+                  $ref: '#/components/schemas/User'
+
     post:
-      summary: Create a new post
-      tags:
-        - Posts
+      summary: Create a new user
+      operationId: createUser
       requestBody:
-        required: true
+        description: User to create
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: Post title
-                content:
-                  type: string
-                  example: Post content
+              $ref: '#/components/schemas/UserCreate'
       responses:
         '201':
-          description: Post successfully created
-        '400':
-          description: Bad request
-
-  /api/posts/{id}:
-    get:
-      summary: Get a specific post by ID
-      tags:
-        - Posts
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            example: 1
-      responses:
-        '200':
-          description: Post details
+          description: The user was created
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  id:
-                    type: integer
-                    example: 1
-                  title:
-                    type: string
-                    example: Post title
-                  content:
-                    type: string
-                    example: Post content
-                  userId:
-                    type: integer
-                    example: 1
-        '404':
-          description: Post not found
-    put:
-      summary: Update a specific post by ID
-      tags:
-        - Posts
+                $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    get:
+      summary: Get a user by ID
+      operationId: getUser
       parameters:
-        - name: id
+        - name: userId
           in: path
           required: true
+          description: The ID of the user
           schema:
             type: integer
-            example: 1
+      responses:
+        '200':
+          description: The user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    put:
+      summary: Update a user by ID
+      operationId: updateUser
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The ID of the user
+          schema:
+            type: integer
       requestBody:
-        required: true
+        description: User details to update
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: Updated title
-                content:
-                  type: string
-                  example: Updated content
+              $ref: '#/components/schemas/UserUpdate'
       responses:
         '200':
-          description: Post successfully updated
-        '400':
-          description: Bad request
-        '404':
-          description: Post not found
-    delete:
-      summary: Delete a specific post by ID
-      tags:
-        - Posts
+          description: The updated user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /posts:
+    get:
+      summary: Get a list of posts
+      operationId: getPosts
+      responses:
+        '200':
+          description: A list of posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+
+    post:
+      summary: Create a new post
+      operationId: createPost
+      requestBody:
+        description: Post to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreate'
+      responses:
+        '201':
+          description: The post was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+
+  /posts/{postId}:
+    get:
+      summary: Get a post by ID
+      operationId: getPost
       parameters:
-        - name: id
+        - name: postId
           in: path
           required: true
+          description: The ID of the post
           schema:
             type: integer
-            example: 1
       responses:
         '200':
-          description: Post successfully deleted
-        '404':
-          description: Post not found
+          description: The post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+
+    put:
+      summary: Update a post by ID
+      operationId: updatePost
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The ID of the post
+          schema:
+            type: integer
+      requestBody:
+        description: Post details to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdate'
+      responses:
+        '200':
+          description: The updated post details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+
+    delete:
+      summary: Delete a post by ID
+      operationId: deletePost
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The ID of the post
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: The post was deleted
+
+  /posts/{postId}/comments:
+    get:
+      summary: Get a list of comments for a post
+      operationId: getPostComments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The ID of the post
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+
+    post:
+      summary: Create a new comment on a post
+      operationId: createComment
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The ID of the post
+          schema:
+            type: integer
+      requestBody:
+        description: Comment to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreate'
+      responses:
+        '201':
+          description: The comment was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+  /comments/{commentId}:
+    get:
+      summary: Get a comment by ID
+      operationId: getComment
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: The ID of the comment
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: The comment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+
+    delete:
+      summary: Delete a comment by ID
+      operationId: deleteComment
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: The ID of the comment
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: The comment was deleted
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   schemas:
     User:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         email:
           type: string
-          example: user@example.com
-        password:
+        name:
           type: string
-          format: password
-          example: password123
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserCreate:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+
     Post:
       type: object
       properties:
         id:
           type: integer
-          example: 1
         title:
           type: string
-          example: Post title
         content:
           type: string
-          example: Post content
-        userId:
+        published:
+          type: boolean
+        authorId:
           type: integer
-          example: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PostCreate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        published:
+          type: boolean
+        authorId:
+          type: integer
+
+    PostUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        published:
+          type: boolean
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        postId:
+          type: integer
+        authorId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CommentCreate:
+      type: object
+      properties:
+        content:
+          type: string
+        postId:
+          type: integer
+        authorId:
+          type: integer

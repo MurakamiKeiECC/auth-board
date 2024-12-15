@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import express, { Request, Response } from "express";
+import cors from "cors";
 
 // Prismaクライアントの初期化
 const prisma = new PrismaClient();
@@ -8,32 +9,18 @@ const app = express();
 // APIルータを作成
 const apiRouter = express.Router();
 
+// CORS設定
+app.use(cors({
+  origin: 'http://localhost:8080',  // フロントエンドのURLを指定
+  methods: ['GET', 'POST'],        // 許可するHTTPメソッド
+  allowedHeaders: ['Content-Type'], // 許可するヘッダー
+}));
+
 // ミドルウェアの設定
 app.use(express.json());
 
-// 成功レスポンスを返す共通関数
-const sendSuccessResponse = (res: Response, data: any) => {
-  res.status(200).json(data);
-};
-
-// エラーハンドリングの共通関数
-const handleError = (res: Response, error: any, message: string) => {
-  console.error(error);
-  res.status(500).json({ error: message });
-};
-
-// ユーザーリスト取得用の汎用的なレスポンスハンドラ
-const getUsers = async (req: Request, res: Response) => {
-  try {
-    const users = await prisma.user.findMany();
-    sendSuccessResponse(res, users);
-  } catch (error) {
-    handleError(res, error, "Failed to fetch users");
-  }
-};
-
 // 投稿リスト取得用のレスポンスハンドラ
-const getPosts = async (req: Request, res: Response) => {
+const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
     const posts = await prisma.post.findMany({
       include: {
@@ -41,16 +28,87 @@ const getPosts = async (req: Request, res: Response) => {
         comments: true,
       },
     });
-    sendSuccessResponse(res, posts);
+    if (!posts) {
+      res.status(404).json({ error: "Posts not found" });
+      return;
+    }
+    res.status(200).json(posts);
   } catch (error) {
-    handleError(res, error, "Failed to fetch posts");
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch posts" });
+  }
+};
+
+// 投稿詳細取得用のレスポンスハンドラ
+const getPostDetail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const postId = Number(req.params.id); // 投稿IDをパラメータから取得
+
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        author: true,
+        comments: true,
+      },
+    });
+
+    if (!post) {
+      res.status(404).json({ error: "Post not found" });
+      return;
+    }
+
+    res.status(200).json(post);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch post details" });
+  }
+};
+
+// 投稿IDに関連するコメントを取得するエンドポイント
+const getPostComments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const postId = Number(req.params.id); // 投稿IDをパラメータから取得
+
+    const comments = await prisma.comment.findMany({
+      where: { postId },
+      include: {
+        author: true, // コメントの著者も取得する場合
+      },
+    });
+
+    if (!comments) {
+      res.status(404).json({ error: "Comments not found" });
+      return;
+    }
+
+    res.status(200).json(comments);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch comments" });
   }
 };
 
 // /api/users エンドポイントを定義
-apiRouter.get("/users", getUsers);
+apiRouter.get("/users", async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany();
+    if (!users) {
+      res.status(404).json({ error: "Users not found" });
+      return;
+    }
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
 // /api/posts エンドポイントを定義
 apiRouter.get("/posts", getPosts);
+apiRouter.get("/posts/:id", getPostDetail);
+
+// /api/posts/:id/comments エンドポイントを定義
+apiRouter.get("/posts/:id/comments", getPostComments);
 
 // /api グループにルータを適用
 app.use("/api", apiRouter);

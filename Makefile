@@ -8,8 +8,8 @@ up:
 down:
 	$(dc) down
 
-.PHONY: restart
-restart:
+.PHONY: reup
+reup:
 	make down
 	make up
 

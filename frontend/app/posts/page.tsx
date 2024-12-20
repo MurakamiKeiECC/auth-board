@@ -1,7 +1,6 @@
-"use client";
+// this ssr
 
 import Layout from "../../components/Layout";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 
 interface Post {
@@ -12,22 +11,16 @@ interface Post {
   };
 }
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([]);
+async function fetchPosts(): Promise<Post[]> {
+  const response = await fetch("http://backend:3000/api/posts", { cache: "no-store" }); // Disable caching for fresh data
+  if (!response.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+  return response.json();
+}
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/posts');
-        const data = await response.json();
-        setPosts(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to fetch posts:", error);
-      }
-    };
-
-    fetchPosts();
-  }, []);
+export default async function PostsPage() {
+  const posts = await fetchPosts();
 
   return (
     <Layout>
@@ -38,7 +31,10 @@ export default function Home() {
           <li className="text-center text-lg text-gray-600">まだ投稿がありません。</li>
         ) : (
           posts.map((post) => (
-            <li key={post.id} className="bg-white p-6 rounded-lg shadow-xl border border-gray-200 transition-all duration-300 hover:shadow-2xl hover:border-teal-300">
+            <li
+              key={post.id}
+              className="bg-white p-6 rounded-lg shadow-xl border border-gray-200 transition-all duration-300 hover:shadow-2xl hover:border-teal-300"
+            >
               <h2 className="text-2xl font-semibold text-teal-900 mb-2">
                 <Link href={`/posts/${post.id}`} className="hover:underline">
                   {post.title}

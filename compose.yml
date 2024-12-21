@@ -54,6 +54,14 @@ services:
     depends_on:
       - postgres
 
+  openapi-generator:
+    container_name: "openapi-generator"
+    image: openapitools/openapi-generator-cli
+    volumes:
+      - ./docs:/docs
+    command: >
+      generate -i /docs/openapi.yml -g html2 -o /docs/output
+
   swagger-editor:
     container_name: "swagger-editor"
     image: swaggerapi/swagger-editor

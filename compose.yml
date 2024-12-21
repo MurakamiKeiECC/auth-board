@@ -45,7 +45,28 @@ services:
         npm run dev
       "
 
+  swagger-editor:
+    container_name: "swagger-editor"
+    image: swaggerapi/swagger-editor
+    ports:
+      - "3010:8080"
+    depends_on:
+      - openapi-generator
+
+  openapi-generator:
+    container_name: "openapi-generator"
+    image: openapitools/openapi-generator-cli
+    working_dir: /docs
+    volumes:
+      - ./docs/openapi:/docs
+    command: >
+      generate -i openapi.yml -g markdown -o docs
+    depends_on:
+      - postgres
+      - tbls
+
   tbls:
+    container_name: "tbls"
     image: k1low/tbls
     working_dir: /work
     volumes:
@@ -53,6 +74,18 @@ services:
     command: doc postgresql://user:your_password@postgres:5432/database?sslmode=disable
     depends_on:
       - postgres
+
+  swagger-ui:
+    container_name: "swagger-ui"
+    image: swaggerapi/swagger-ui
+    ports:
+      - "3020:8080"
+    volumes:
+      - ./docs/openapi:/swagger
+    environment:
+      SWAGGER_JSON: /swagger/openapi.yml
+    depends_on:
+      - openapi-generator
 
   swagger-bundle:
     container_name: "swagger-bundle"
@@ -73,38 +106,6 @@ services:
       swagger-cli validate /docs/openapi.yml
     depends_on:
       - swagger-ui
-
-  openapi-generator:
-    container_name: "openapi-generator"
-    image: openapitools/openapi-generator-cli
-    working_dir: /docs
-    volumes:
-      - ./docs/openapi:/docs
-    command: >
-      generate -i openapi.yml -g markdown -o docs
-    depends_on:
-      - postgres
-      - tbls
-
-  swagger-editor:
-    container_name: "swagger-editor"
-    image: swaggerapi/swagger-editor
-    ports:
-      - "3010:8080"
-    depends_on:
-      - openapi-generator
-
-  swagger-ui:
-    container_name: "swagger-ui"
-    image: swaggerapi/swagger-ui
-    ports:
-      - "3020:8080"
-    volumes:
-      - ./docs/openapi:/swagger
-    environment:
-      SWAGGER_JSON: /swagger/openapi.yml
-    depends_on:
-      - openapi-generator
 
   swagger-api:
     container_name: "swagger-api"
@@ -133,7 +134,7 @@ services:
     container_name: "mkdocs"
     image: squidfunk/mkdocs-material
     ports:
-      - "3050:8000"
+      - "3040:8000"
     volumes:
       - ./:/docs
     command: >

@@ -1,0 +1,9 @@
+extends: spectral:oas
+rules:
+  operation-tags:
+    description: "Operations must have at least one tag."
+    severity: warn
+    given: "$.paths.*.*"
+    then:
+      field: tags
+      function: truthy

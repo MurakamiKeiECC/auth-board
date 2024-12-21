@@ -54,19 +54,45 @@ services:
     depends_on:
       - postgres
 
+  swagger-bundle:
+    container_name: "swagger-bundle"
+    image: jeanberu/swagger-cli
+    volumes:
+      - ./docs/openapi:/docs
+    command: >
+      swagger-cli bundle /docs/openapi.yml -t yaml --outfile /docs/bundled.yaml
+    depends_on:
+      - swagger-ui
+
+  swagger-validate:
+    container_name: "swagger-validate"
+    image: jeanberu/swagger-cli
+    volumes:
+      - ./docs/openapi:/docs
+    command: >
+      swagger-cli validate /docs/openapi.yml
+    depends_on:
+      - swagger-ui
+
   openapi-generator:
     container_name: "openapi-generator"
     image: openapitools/openapi-generator-cli
+    working_dir: /docs
     volumes:
-      - ./docs:/docs
+      - ./docs/openapi:/docs
     command: >
-      generate -i /docs/openapi.yml -g html2 -o /docs/output
+      generate -i openapi.yml -g markdown -o docs
+    depends_on:
+      - postgres
+      - tbls
 
   swagger-editor:
     container_name: "swagger-editor"
     image: swaggerapi/swagger-editor
     ports:
       - "3010:8080"
+    depends_on:
+      - openapi-generator
 
   swagger-ui:
     container_name: "swagger-ui"
@@ -74,19 +100,44 @@ services:
     ports:
       - "3020:8080"
     volumes:
-      - ./docs:/swagger
+      - ./docs/openapi:/swagger
     environment:
       SWAGGER_JSON: /swagger/openapi.yml
+    depends_on:
+      - openapi-generator
 
   swagger-api:
     container_name: "swagger-api"
     image: stoplight/prism:5
     volumes:
-      - ./docs:/swagger
+      - ./docs/openapi:/swagger
     ports:
       - "3030:4010"
     command: |
       mock -h 0.0.0.0 /swagger/openapi.yml -d
+    depends_on:
+      - openapi-generator
+
+  stoplight-spectral:
+    container_name: "stoplight-spectral"
+    image: stoplight/spectral:6
+    working_dir: /docs
+    volumes:
+      - ./docs/openapi:/docs
+    command: >
+      lint /docs/openapi.yml
+    depends_on:
+      - swagger-ui
+
+  mkdocs:
+    container_name: "mkdocs"
+    image: squidfunk/mkdocs-material
+    ports:
+      - "3050:8000"
+    volumes:
+      - ./:/docs
+    command: >
+      serve --dev-addr=0.0.0.0:8000
 
   studio:
     container_name: "studio"
